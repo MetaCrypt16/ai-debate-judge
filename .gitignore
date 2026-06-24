@@ -9,6 +9,12 @@ backend/__pycache__/
 *.pyc
 
 # Node
+node_modules/
+dist/
+build/
+react-frontend/node_modules/
+react-frontend/dist/
+node-backend/node_modules/
 Ai-Judge/node_modules/
 Ai-Judge/dist/
 Ai-Judge/build/

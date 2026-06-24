@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: theme('colors.soft-beige');
+    color: theme('colors.debate-dark');
+  }
+}
+
+@layer utilities {
+  .border-debate {
+    border-color: theme('colors.debate-border');
+  }
+}

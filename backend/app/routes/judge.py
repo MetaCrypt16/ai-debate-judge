@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.models.schemas import DebateRequest, JudgmentResponse
+from app.models.schemas import DebateRequest, JudgmentResponse, SingleSideRequest, SingleSideResponse
 from app.services.retrieval_service import DebateRetriever
 from app.services.judge_service import DebateJudge
 from app.services.scoring_service import DebateScorer
@@ -148,6 +148,54 @@ async def judge_debate(debate: DebateRequest):
     
     except Exception as e:
         print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/score_side", response_model=SingleSideResponse)
+async def score_side(request: SingleSideRequest):
+    """Endpoint for Node.js Express server to score a single side."""
+    print(f"\n⚖️ SCORING SIDE for topic: {request.topic}")
+    
+    try:
+        args_list = [request.arguments]
+        
+        dec = judge.decompose_argument(request.arguments, request.topic)
+        
+        evidence = []
+        for claim in dec.get('claims', []):
+            ev = retriever.retrieve(claim, top_k=3)
+            evidence.extend(ev)
+            
+        logic = judge.score_side(args_list, evidence, 'logician')
+        time.sleep(1)
+        facts_score = judge.score_side(args_list, evidence, 'fact_checker')
+        time.sleep(1)
+        rhetoric = judge.score_side(args_list, evidence, 'orator')
+        
+        params = scorer.calculate_parameters(
+            evidence, args_list,
+            json.dumps([logic, facts_score, rhetoric])
+        )
+        
+        final_score = (
+            0.25 * logic['score'] +
+            0.20 * facts_score['score'] +
+            0.20 * rhetoric['score'] +
+            0.35 * (params['total_normalized'] / 10)
+        ) * 10
+        
+        justification = f"Logic: {logic.get('feedback', 'No logic feedback')}\n\nFacts: {facts_score.get('feedback', 'No fact feedback')}\n\nRhetoric: {rhetoric.get('feedback', 'No rhetoric feedback')}"
+        improvements = "To improve, ensure claims are backed by highly relevant evidence, minimize logical leaps, and adopt a more persuasive, balanced rhetorical tone."
+        
+        return SingleSideResponse(
+            score=round(final_score, 1),
+            justification=justification,
+            improvements=improvements
+        )
+        
+    except Exception as e:
+        print(f"❌ Error scoring side: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

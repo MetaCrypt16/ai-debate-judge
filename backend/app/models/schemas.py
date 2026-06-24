@@ -41,3 +41,12 @@ class JudgmentResponse(BaseModel):
     affirmative_breakdown: ParameterBreakdown
     negative_breakdown: ParameterBreakdown
     evidence_sources: Dict[str, Dict[str, int]]
+
+class SingleSideRequest(BaseModel):
+    topic: str
+    arguments: str
+
+class SingleSideResponse(BaseModel):
+    score: float
+    justification: str
+    improvements: str
